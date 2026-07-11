@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import *
 from enum import Enum
 from pydantic import BaseModel
 
@@ -10,7 +10,7 @@ class Usr(BaseModel) :
     
 users =[]
 
-@app.post("/user/")
+@app.post("/users")
 def adduser(user: Usr) :
     if user.age < 0:
         return {
@@ -38,4 +38,18 @@ def Gid() :
         if user["id"] > max :
             max = user["id"]
     return max+1
+
+@app.get("/users")
+def allusers () :
+    return users
+
+@app.get("/users/{id}")
+def getuser (uid: int) :
+    for user in users :
+        if user["id"] == uid :
+            return user
+    raise HTTPException(
+        status_code= 404
+        detail= "User not found"
+    )
 

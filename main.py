@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from database import *
 
 app = FastAPI()
 
@@ -7,21 +8,16 @@ class Usr(BaseModel) :
     name: str
     age: int
     
-users =[]
+
 
 @app.post("/users")
-def adduser(user: Usr) :
+def adduser0(user: Usr) :
     if user.age < 0:
         raise HTTPException(
     status_code=400,
     detail="Invalid age"
 )
-    x = Gid()
-    users.append({
-        "id":x,
-        "name":user.name,
-        "age":user.age
-        })
+    x=adduser(user.name,user.age)
     return {
         "message":"User created",
         "user":{
@@ -31,61 +27,58 @@ def adduser(user: Usr) :
         }
         }
 
-def Gid() :
-    max = 0
-    for user in users :
-        if user["id"] > max :
-            max = user["id"]
-    return max+1
 
 @app.get("/users")
 def allusers () :
-    return users
+    return getallusers()
 
 @app.get("/users/{id}")
-def getuser (id: int) :
-    for user in users :
-        if user["id"] == id :
-            return user
-    raise HTTPException(
-        status_code= 404,
-        detail= "User not found"
-    )
+def getuser0 (id: int) :
+    user = getuser(id)  
+    if user is None :
+        raise HTTPException(
+            status_code= 404,
+            detail= "User not found"
+        )
+    return user
 
 @app.delete("/users/{id}")
-def deleteuser (id: int):
-    for user in users :
-        if user["id"] == id :
-            users.remove(user)
-            return {
+def deleteuser0 (id: int):
+    user = getuser(id)  
+    if user is None :
+        raise HTTPException(
+            status_code= 404,
+            detail= "User not found"
+        )
+    deleteuser(id)
+    return {
                 "message":"User deleted",
                 "id" : id
                 }
-    raise HTTPException(
-        status_code= 404,
-        detail= "User not found"
-    )
+    
 
 @app.put("/users/{id}")
-def updateuser (id: int, user: Usr) :
+def updateuser0 (id: int, user: Usr) :
     if user.age < 0:
         raise HTTPException(
     status_code=400,
     detail="Invalid age"
 )
     
-    for u in users :
-        if u["id"] == id :
-            u["name"] = user.name
-            u["age"] = user.age
-            return {
+    u = getuser(id)
+    if u is None :
+            
+        raise HTTPException(
+            status_code= 404,
+            detail= "User not found"
+        )
+    
+    updateuser(id,user.name,user.age)
+    u = getuser(id)
+    return {
                 "message":"User updated",
                 "user" : u
                 }
-    raise HTTPException(
-        status_code= 404,
-        detail= "User not found"
-    )
 
 class Userup (BaseModel):
     name: str | None =None
@@ -98,17 +91,22 @@ def updateusernameorage (id: int, user: Userup) :
     status_code=400,
     detail="Invalid age"
 )
-    for u in users :
-        if u["id"] == id :
-            if user.name is not None :
-                u["name"] = user.name
-            if user.age is not None :
-                u["age"] = user.age
-            return {
+    if user.name is None and user.age is None:
+        raise HTTPException(
+        status_code=400,
+        detail="No data provided"
+    )
+    u = getuser(id)
+    if u is None :
+            
+        raise HTTPException(
+            status_code= 404,
+            detail= "User not found"
+        )
+    
+    updateuser(id,user.name,user.age)
+    u = getuser(id)
+    return {
                 "message":"User updated",
                 "user" : u
                 }
-    raise HTTPException(
-        status_code= 404,
-        detail= "User not found"
-    )

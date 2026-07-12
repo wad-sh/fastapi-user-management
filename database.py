@@ -17,6 +17,7 @@ connect.commit()
 def adduser (name,age) :
     cursor.execute("INSERT INTO users(name,age) VALUES (? , ?)",(name,age))
     connect.commit()
+    return cursor.lastrowid
 
 def deleteuser(id) :
     cursor.execute("DELETE FROM users WHERE id = ?",(id,))
